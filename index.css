@@ -8,7 +8,7 @@ body {
   display: block;
   top: 0; bottom: 0;
   left: 0; right: 0;
-  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .range {
@@ -21,11 +21,13 @@ body {
   height: 20px;
 }
 
-#brightness {
-  bottom: 20px;
-}
-
 #scale {
+  bottom: 80px;
+}
+#brightness {
   bottom: 50px;
+}
+#src {
+  bottom: 20px;
 }
 

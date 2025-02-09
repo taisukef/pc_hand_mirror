@@ -1,39 +1,67 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="index.css">
-    <title>ただの鏡</title>
-  </head>
-  <body>
-    <video id="video" ></video>
-    <div class="range" id="brightness">
-      <img src="img/brightness.png">
-      <input type="range" id="rngBrightness" value="1" step="0.1" min="1" max="10">
-    </div>
-    <div class="range" id="scale">
-      <img src="img/scale.png">
-      <input type="range" id="rngScale" value="1" step="0.1" min="1" max="10">
-    </div>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<link rel="stylesheet" href="index.css">
+<title>ただの鏡</title>
+</head><body>
+
+<video id="video"></video>
+<div class="range" id="brightness">
+  <img src="img/brightness.png">
+  <input type="range" id="rngBrightness" value="1" step="0.1" min="1" max="10">
+</div>
+<div class="range" id="scale">
+  <img src="img/scale.png">
+  <input type="range" id="rngScale" value="1" step="0.1" min="1" max="10">
+</div>
+<div class="range" id="src">
+  <select id="selsrc"></select>
+</div>
 
 <script type="module">
+const startCamera = async (deviceId = undefined) => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: deviceId ? { deviceId } : true,
+      audio: false,
+    });
+    video.srcObject = stream;
+    video.play();
+
+    rngBrightness.oninput = (e) => {
+      const val = e.target.value;
+      video.style.filter = "brightness(" + val + ")";
+    };
+
+    rngScale.oninput = (e) => {
+      const val = e.target.value;
+      video.style.transform = "scale(" + (-1 * val) + ',' + val + ")";
+    };
+  } catch (e) {
+    alert("ERROR: カメラを起動できませんでした。カメラの使用を許可してください。");
+  }
+};
+
 try {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-  video.srcObject = stream;
-  video.play();
-
-  rngBrightness.oninput = (e) => {
-    const val = e.target.value;
-    video.style.filter = "brightness(" + val + ")";
-  };
-
-  rngScale.oninput = (e) => {
-    const val = e.target.value;
-    video.style.transform = "scale(" + (-1 * val) + ',' + val + ")";
+  const srcs = await navigator.mediaDevices.enumerateDevices();
+  const cameras = srcs.filter(i => i.kind == 'videoinput');
+  cameras.forEach(i => {
+    const opt = document.createElement("option");
+    console.log(i);
+    opt.textContent = i.label;
+    opt.value = i.deviceId;
+    selsrc.appendChild(opt);
+  });
+  selsrc.oninput = () => {
+    console.log(selsrc.value);
+    startCamera(selsrc.value);
   };
 } catch (e) {
-  alert("ERROR: カメラを起動できませんでした。カメラの使用を許可してください。");
+  alert("ERROR: " + e);
 }
+selsrc.oninput();
+
+video.onclick = () => {
+  document.body.requestFullscreen();
+}; 
 </script>
-</body>
-</html>
+
+</body></html>
