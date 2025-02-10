@@ -1,9 +1,9 @@
 const vertexShader = `attribute vec2 position;
 varying vec2 vUv;
+uniform float zoom;
 void main() {
-  float zoom = 1.0;
   vUv = 0.5 - position * 0.5;
-  vUv = (vUv - 0.5) * zoom + 0.5;
+  vUv = (vUv - 0.5) / zoom + 0.5;
   gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
@@ -57,6 +57,7 @@ export class ShaderCanvas extends HTMLElement {
     const resolutionLocation = gl.getUniformLocation(program, "resolution");
 
     const distratioLocation = gl.getUniformLocation(program, "distratio");
+    const zoomLocation = gl.getUniformLocation(program, "zoom");
 
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -82,10 +83,12 @@ export class ShaderCanvas extends HTMLElement {
       
       //this.distratio = 3.0 + Math.cos(performance.now() / 500) * 2;
       gl.uniform1f(distratioLocation, this.distratio);
+      gl.uniform1f(zoomLocation, this.zoom);
       gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       requestAnimationFrame(render);
     };
+    this.zoom = 1.0;
     this.distratio = 0.0;
     render();
   }

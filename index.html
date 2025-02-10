@@ -1,20 +1,21 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<link rel="stylesheet" href="index.css">
 <title>ただの鏡</title>
 </head><body>
 
 <main id="main"></main>
+<!--
 <div class="range" id="brightness">
   <img src="img/brightness.png">
   <input type="range" id="rngBrightness" value="1" step="0.1" min="1" max="10">
 </div>
+-->
 <div class="range" id="scale">
   <img src="img/scale.png">
-  <input type="range" id="rngScale" value="1" step="0.1" min="1" max="10">
+  <input type="range" id="rngScale" value="2.3" step="0.1" min="1" max="10">
 </div>
 <div class="range" id="distratio">
   <img src="img/scale.png">
-  <input type="range" id="rngDistratio" value="0" step="0.1" min="-8" max="8">
+  <input type="range" id="rngDistratio" value="6" step="0.1" min="-8" max="8">
 </div>
 <div class="range" id="src">
   <select id="selsrc"></select>
@@ -24,6 +25,7 @@
 import { ShaderCanvas } from "./ShaderCanvas.js";
 
 const video = document.createElement("video");
+video.setAttribute("playsinline", true);
 const startCamera = async (deviceId = undefined) => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -33,47 +35,57 @@ const startCamera = async (deviceId = undefined) => {
     video.srcObject = stream;
     video.play();
 
+    // select camera
+    const srcs = await navigator.mediaDevices.enumerateDevices();
+    console.log(srcs)
+    const cameras = srcs.filter(i => i.kind == 'videoinput');
+    selsrc.innerHTML = "";
+    cameras.forEach(i => {
+      const opt = document.createElement("option");
+      console.log(i);
+      opt.textContent = i.label;
+      opt.value = i.deviceId;
+      selsrc.appendChild(opt);
+    });
+    selsrc.oninput = () => {
+      if (selsrc.value == deviceId) return;
+      console.log(selsrc.value);
+      startCamera(selsrc.value);
+    };
+    if (deviceId) {
+      selsrc.value = deviceId;
+    }
+
+    /*
     rngBrightness.oninput = (e) => {
       const val = e.target.value;
       main.style.filter = "brightness(" + val + ")";
     };
-    rngScale.oninput = (e) => {
-      const val = e.target.value;
-      main.style.transform = "scale(" + (-1 * val) + ',' + val + ")";
-    };
+    */
 
     main.innerHTML = null;
     const canvas = new ShaderCanvas(video);
     main.appendChild(canvas);
 
-    rngDistratio.oninput = (e) => {
-      const val = e.target.value;
-      canvas.distratio = val;
+    rngScale.oninput = () => {
+      //main.style.transform = "scale(" + (-1 * val) + ',' + val + ")";
+      canvas.zoom = rngScale.value;
+      console.log(canvas.zoom);
     };
+    rngScale.oninput();
+
+    rngDistratio.oninput = () => {
+      canvas.distratio = rngDistratio.value;
+      console.log(canvas.distratio);
+    };
+    rngDistratio.oninput();
   } catch (e) {
     console.log(e);
     alert("ERROR: カメラを起動できませんでした。カメラの使用を許可してください。");
   }
 };
 
-try {
-  const srcs = await navigator.mediaDevices.enumerateDevices();
-  const cameras = srcs.filter(i => i.kind == 'videoinput');
-  cameras.forEach(i => {
-    const opt = document.createElement("option");
-    console.log(i);
-    opt.textContent = i.label;
-    opt.value = i.deviceId;
-    selsrc.appendChild(opt);
-  });
-  selsrc.oninput = () => {
-    console.log(selsrc.value);
-    startCamera(selsrc.value);
-  };
-} catch (e) {
-  alert("ERROR: " + e);
-}
-selsrc.oninput();
+startCamera();
 
 main.onclick = () => {
   document.body.requestFullscreen();
@@ -110,10 +122,12 @@ input[type=range] {
   height: 20px;
 }
 
-#scale {
-  bottom: 110px;
-}
+/*
 #brightness {
+  bottom: 80px;
+}
+*/
+#scale {
   bottom: 80px;
 }
 #distratio {
